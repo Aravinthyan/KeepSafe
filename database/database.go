@@ -45,6 +45,16 @@ func (db *passwordDB) ReadPasswords(password []byte) error {
 		return fmt.Errorf("failed to convert from JSON to map: %s", err)
 	}
 
+	// create slice which has a capacity five more than the length of the whole
+	// database
+	db.Services = make([]string, len(db.WholeDB), len(db.WholeDB)+5)
+
+	index := 0
+	for service := range db.WholeDB {
+		db.Services[index] = service
+		index++
+	}
+
 	return nil
 }
 
