@@ -1,8 +1,13 @@
 package database
 
 import (
+	"encoding/binary"
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
+	"os"
+
+	"github.com/Aravinthyan/KeepSafe/crypto"
 )
 
 type passwordDB struct {
@@ -19,34 +24,57 @@ func New() *passwordDB {
 
 // ReadPasswords will read the "passwords" file in pwd. The data is
 // saved in a JSON format, which is extracted to be saved in a map
-func (db *passwordDB) ReadPasswords() (bool, bool) {
+func (db *passwordDB) ReadPasswords(password []byte) error {
 
-	fileExists, validJSON := true, true
+	var (
+		encryptedJSONData []byte
+		jsonData          []byte
+		err               error
+	)
 
-	if jsonData, err := ioutil.ReadFile("./passwords"); err == nil {
-		if json.Unmarshal(jsonData, &db.WholeDB) != nil {
-			validJSON = false
-		}
-	} else {
-		fileExists = false
+	if encryptedJSONData, err = ioutil.ReadFile("./passwords"); err != nil {
+		db.WholeDB = make(map[string]string)
+		return fmt.Errorf("no existing passwords: %s", err)
 	}
 
-	return fileExists, validJSON
+	if jsonData, err = crypto.Decrypt(password, encryptedJSONData); err != nil {
+		return fmt.Errorf("decryption failed: %s", err)
+	}
+
+	if err = json.Unmarshal(jsonData, &db.WholeDB); err != nil {
+		return fmt.Errorf("failed to convert from JSON to map: %s", err)
+	}
+
+	return nil
 }
 
 // WritePasswords will write the passwords to a file called "passwords"
 // in pwd.
-func (db *passwordDB) WritePasswords() (bool, bool) {
+func (db *passwordDB) WritePasswords(password []byte) error {
 
-	validJSON, writeError := true, true
+	var (
+		jsonData   []byte
+		outputFile *os.File
+		err        error
+	)
 
-	if jsonData, err := json.Marshal(db.WholeDB); err == nil {
-		if err := ioutil.WriteFile("./passwords", jsonData, 0700); err != nil {
-			writeError = false
-		}
-	} else {
-		validJSON = false
+	if jsonData, err = json.Marshal(db.WholeDB); err != nil {
+		return fmt.Errorf("failed to convert from map to JSON: %s", err)
 	}
 
-	return validJSON, writeError
+	var encryptedJSONData string
+	if encryptedJSONData, err = crypto.Encrypt(password, jsonData); err != nil {
+		return fmt.Errorf("encryption failed: %s", err)
+	}
+
+	if outputFile, err = os.Create("./passwords"); err != nil {
+		return fmt.Errorf("path error: %s", err)
+	}
+	defer outputFile.Close()
+
+	if err = binary.Write(outputFile, binary.LittleEndian, []byte(encryptedJSONData)); err != nil {
+		return fmt.Errorf("binary.Write failed: %s", err)
+	}
+
+	return nil
 }
