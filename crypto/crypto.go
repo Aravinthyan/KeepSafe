@@ -13,7 +13,7 @@ import (
 	"golang.org/x/crypto/pbkdf2"
 )
 
-// Get 32 byte key from user provided password using SHA-256 hash
+// getKey gets a 32 byte key from user provided password using SHA-256 hash.
 func getKey(password, salt []byte) ([]byte, []byte) {
 
 	// if salt is not provided then produce a random salt
@@ -31,7 +31,7 @@ func getKey(password, salt []byte) ([]byte, []byte) {
 
 // Encrypt will encrypt plainData by producing a 32 byte key using AES-256
 // and return a string with the following format:
-// <plainDataLength>-<salt>-<iv>-<cipherData>
+// <plainDataLength>-<salt>-<iv>-<cipherData>.
 func Encrypt(password, plainData []byte) (string, error) {
 
 	var err error
@@ -79,7 +79,7 @@ func Encrypt(password, plainData []byte) (string, error) {
 	return hex.EncodeToString(plainDataLength) + "-" + hex.EncodeToString(salt) + "-" + hex.EncodeToString(iv) + "-" + hex.EncodeToString(cipherData), err
 }
 
-// Decrpyt will decrypt the ciphertext and return the original text that was decrypted
+// Decrpyt will decrypt the ciphertext and return the original text that was decrypted.
 func Decrypt(password, ciphertext []byte) ([]byte, error) {
 
 	var err error

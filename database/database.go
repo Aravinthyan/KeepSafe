@@ -10,11 +10,13 @@ import (
 	"github.com/Aravinthyan/KeepSafe/crypto"
 )
 
+// passwordDb holds the passwords for each service.
 type passwordDB struct {
 	WholeDB  map[string]string
 	Services []string
 }
 
+// New creates a new passwordDB.
 func New() *passwordDB {
 	db := new(passwordDB)
 	db.WholeDB = nil
@@ -22,8 +24,7 @@ func New() *passwordDB {
 	return db
 }
 
-// ReadPasswords will read the "passwords" file in pwd. The data is
-// saved in a JSON format, which is extracted to be saved in a map
+// ReadPasswords will read the "passwords" file in pwd and save the data in a map.
 func (db *passwordDB) ReadPasswords(password []byte) error {
 
 	var (
@@ -45,8 +46,7 @@ func (db *passwordDB) ReadPasswords(password []byte) error {
 		return fmt.Errorf("failed to convert from JSON to map: %s", err)
 	}
 
-	// create slice which has a capacity five more than the length of the whole
-	// database
+	// create slice which is five more than the length of the whole database
 	db.Services = make([]string, len(db.WholeDB), len(db.WholeDB)+5)
 
 	index := 0
@@ -58,8 +58,7 @@ func (db *passwordDB) ReadPasswords(password []byte) error {
 	return nil
 }
 
-// WritePasswords will write the passwords to a file called "passwords"
-// in pwd.
+// WritePasswords will write the passwords to a file called "passwords" in pwd.
 func (db *passwordDB) WritePasswords(password []byte) error {
 
 	var (
