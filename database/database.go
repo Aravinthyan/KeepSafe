@@ -12,14 +12,14 @@ import (
 
 // PasswordDB holds the passwords for each service.
 type PasswordDB struct {
-	WholeDB  map[string]string
+	wholeDB  map[string]string
 	Services []string
 }
 
 // New creates a new PasswordDB.
 func New() *PasswordDB {
 	db := new(PasswordDB)
-	db.WholeDB = nil
+	db.wholeDB = nil
 	db.Services = nil
 	return db
 }
@@ -34,7 +34,7 @@ func (db *PasswordDB) ReadPasswords(password []byte) error {
 	)
 
 	if encryptedJSONData, err = ioutil.ReadFile("./passwords"); err != nil {
-		db.WholeDB = make(map[string]string)
+		db.wholeDB = make(map[string]string)
 		return fmt.Errorf("no existing passwords: %s", err)
 	}
 
@@ -42,15 +42,15 @@ func (db *PasswordDB) ReadPasswords(password []byte) error {
 		return fmt.Errorf("decryption failed: %s", err)
 	}
 
-	if err = json.Unmarshal(jsonData, &db.WholeDB); err != nil {
+	if err = json.Unmarshal(jsonData, &db.wholeDB); err != nil {
 		return fmt.Errorf("failed to convert from JSON to map: %s", err)
 	}
 
 	// create slice which is five more than the length of the whole database
-	db.Services = make([]string, len(db.WholeDB), len(db.WholeDB)+5)
+	db.Services = make([]string, len(db.wholeDB), len(db.wholeDB)+5)
 
 	index := 0
-	for service := range db.WholeDB {
+	for service := range db.wholeDB {
 		db.Services[index] = service
 		index++
 	}
@@ -67,7 +67,7 @@ func (db *PasswordDB) WritePasswords(password []byte) error {
 		err        error
 	)
 
-	if jsonData, err = json.Marshal(db.WholeDB); err != nil {
+	if jsonData, err = json.Marshal(db.wholeDB); err != nil {
 		return fmt.Errorf("failed to convert from map to JSON: %s", err)
 	}
 
