@@ -3,6 +3,7 @@ package database
 import (
 	"encoding/binary"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -68,6 +69,10 @@ func (db *PasswordDB) WritePasswords(password []byte) error {
 		outputFile *os.File
 		err        error
 	)
+
+	if db.wholeDB == nil {
+		return errors.New("nothing to write")
+	}
 
 	if jsonData, err = json.Marshal(db.wholeDB); err != nil {
 		return fmt.Errorf("failed to convert from map to JSON: %s", err)
