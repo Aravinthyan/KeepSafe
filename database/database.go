@@ -94,3 +94,42 @@ func (db *PasswordDB) WritePasswords(password []byte) error {
 
 	return nil
 }
+
+func (db *PasswordDB) CreateEmptyDB() {
+	db.wholeDB = make(map[string]string)
+}
+
+func (db *PasswordDB) Insert(service, password string) error {
+	if _, exist := db.wholeDB[service]; exist {
+		return errors.New("service does exist")
+	}
+
+	db.wholeDB[service] = password
+	db.Services = append(db.Services, service)
+	return nil
+}
+
+func (db *PasswordDB) Remove(service string) error {
+	if _, exist := db.wholeDB[service]; exist {
+		delete(db.wholeDB, service)
+
+		for index, value := range db.Services {
+			if value == service {
+				servicesLength := len(db.Services) - 1
+				db.Services[index] = db.Services[servicesLength]
+				db.Services[servicesLength] = ""
+				db.Services = db.Services[:servicesLength]
+			}
+		}
+		return nil
+	}
+
+	return errors.New("service does not exist")
+}
+
+func (db *PasswordDB) Password(service string) string {
+	if password, exist := db.wholeDB[service]; exist {
+		return password
+	}
+	return ""
+}
