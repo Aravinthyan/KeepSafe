@@ -285,7 +285,7 @@ func main() {
 		passwordsDoNotMatch := canvas.NewText("Passwords do not match", color.NRGBA{R: 255, G: 0, B: 0, A: 255})
 		passwordsDoNotMatch.Hide()
 
-		enterButton := widget.NewButton("Enter", func() {
+		enterButton := widget.NewButtonWithIcon("", theme.ConfirmIcon(), func() {
 			if passwordEntryOne.Text == passwordEntryTwo.Text {
 				masterPassword = []byte(passwordEntryOne.Text)
 				passwords.CreateEmptyDB()
@@ -296,7 +296,9 @@ func main() {
 		})
 
 		content = container.NewGridWithRows(
-			12,
+			16,
+			layout.NewSpacer(),
+			layout.NewSpacer(),
 			layout.NewSpacer(),
 			layout.NewSpacer(),
 			layout.NewSpacer(),
@@ -305,6 +307,8 @@ func main() {
 			passwordEntryTwo,
 			enterButton,
 			passwordsDoNotMatch,
+			layout.NewSpacer(),
+			layout.NewSpacer(),
 			layout.NewSpacer(),
 			layout.NewSpacer(),
 			layout.NewSpacer(),
@@ -319,7 +323,7 @@ func main() {
 		incorrectPassword := canvas.NewText("Incorrect password", color.NRGBA{R: 255, G: 0, B: 0, A: 255})
 		incorrectPassword.Hide()
 
-		enterButton := widget.NewButton("Enter", func() {
+		enterButton := widget.NewButtonWithIcon("", theme.ConfirmIcon(), func() {
 			masterPassword = []byte(passwordEntry.Text)
 			if checkPassword(passwords, masterPassword) {
 				accessPasswords(passwords, window)
@@ -329,7 +333,10 @@ func main() {
 		})
 
 		content = container.NewGridWithRows(
-			11,
+			16,
+			layout.NewSpacer(),
+			layout.NewSpacer(),
+			layout.NewSpacer(),
 			layout.NewSpacer(),
 			layout.NewSpacer(),
 			layout.NewSpacer(),
@@ -337,6 +344,8 @@ func main() {
 			passwordEntry,
 			enterButton,
 			incorrectPassword,
+			layout.NewSpacer(),
+			layout.NewSpacer(),
 			layout.NewSpacer(),
 			layout.NewSpacer(),
 			layout.NewSpacer(),
