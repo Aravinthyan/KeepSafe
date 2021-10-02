@@ -16,6 +16,8 @@ type PasswordDB struct {
 	Services []string
 }
 
+const PasswordFile = "./passwords"
+
 // New creates a new PasswordDB.
 func New() *PasswordDB {
 	db := new(PasswordDB)
@@ -33,7 +35,7 @@ func (db *PasswordDB) ReadPasswords(password []byte) error {
 		err               error
 	)
 
-	if encryptedJSONData, err = ioutil.ReadFile("./passwords"); err != nil {
+	if encryptedJSONData, err = ioutil.ReadFile(PasswordFile); err != nil {
 		db.wholeDB = make(map[string]string)
 		return fmt.Errorf("no existing passwords: %s", err)
 	}
@@ -76,7 +78,7 @@ func (db *PasswordDB) WritePasswords(password []byte) error {
 		return fmt.Errorf("encryption failed: %s", err)
 	}
 
-	if outputFile, err = os.Create("./passwords"); err != nil {
+	if outputFile, err = os.Create(PasswordFile); err != nil {
 		return fmt.Errorf("path error: %s", err)
 	}
 	defer outputFile.Close()
