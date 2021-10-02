@@ -282,17 +282,24 @@ func main() {
 		passwordEntryTwo := widget.NewPasswordEntry()
 		passwordEntryTwo.SetPlaceHolder("Enter master password again...")
 
-		passwordsDoNotMatch := canvas.NewText("Passwords do not match", color.NRGBA{R: 255, G: 0, B: 0, A: 255})
-		passwordsDoNotMatch.Hide()
+		errorMsg := canvas.NewText("", color.NRGBA{R: 255, G: 0, B: 0, A: 255})
 
 		enterButton := widget.NewButtonWithIcon("", theme.ConfirmIcon(), func() {
-			if passwordEntryOne.Text == passwordEntryTwo.Text {
-				masterPassword = []byte(passwordEntryOne.Text)
-				passwords.CreateEmptyDB()
-				accessPasswords(passwords, window)
-			} else {
-				passwordsDoNotMatch.Show()
+			if passwordEntryOne.Text == "" || passwordEntryTwo.Text == "" {
+				errorMsg.Text = "Please enter a password"
+				errorMsg.Refresh()
+				return
 			}
+
+			if passwordEntryOne.Text != passwordEntryTwo.Text {
+				errorMsg.Text = "Passwords do not match"
+				errorMsg.Refresh()
+				return
+			}
+
+			masterPassword = []byte(passwordEntryOne.Text)
+			passwords.CreateEmptyDB()
+			accessPasswords(passwords, window)
 		})
 
 		content = container.NewGridWithRows(
@@ -306,7 +313,7 @@ func main() {
 			passwordEntryOne,
 			passwordEntryTwo,
 			enterButton,
-			passwordsDoNotMatch,
+			errorMsg,
 			layout.NewSpacer(),
 			layout.NewSpacer(),
 			layout.NewSpacer(),
