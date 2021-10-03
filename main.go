@@ -14,6 +14,7 @@ import (
 
 	"image/color"
 
+	"github.com/Aravinthyan/KeepSafe/config"
 	"github.com/Aravinthyan/KeepSafe/database"
 	"github.com/lithammer/fuzzysearch/fuzzy"
 )
@@ -233,8 +234,12 @@ func accessPasswords(passwords *database.PasswordDB, window fyne.Window) {
 		showServicesAsList(passwords.Services, passwords, window)
 	})
 
+	settingsButton := widget.NewButtonWithIcon("", theme.SettingsIcon(), func() {
+		settings(passwords, window)
+	})
+
 	content := container.NewBorder(
-		nil,
+		container.New(layout.NewHBoxLayout(), settingsButton, layout.NewSpacer(), listButton),
 		container.NewGridWithColumns(
 			2,
 			addButton,
@@ -243,8 +248,7 @@ func accessPasswords(passwords *database.PasswordDB, window fyne.Window) {
 		nil,
 		nil,
 		container.NewGridWithRows(
-			15,
-			container.New(layout.NewHBoxLayout(), layout.NewSpacer(), listButton),
+			14,
 			layout.NewSpacer(),
 			layout.NewSpacer(),
 			layout.NewSpacer(),
@@ -271,6 +275,9 @@ func main() {
 
 	window := keepSafe.NewWindow("Keep Safe")
 	window.Resize(fyne.NewSize(500, 700))
+
+	config.AppConfig.ReadConfig()
+	loadConfig()
 
 	var masterPassword []byte
 	var content *fyne.Container
@@ -363,4 +370,5 @@ func main() {
 	window.SetContent(content)
 	window.ShowAndRun()
 	passwords.WritePasswords(masterPassword)
+	config.AppConfig.WriteConfig()
 }
