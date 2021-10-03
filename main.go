@@ -41,11 +41,11 @@ func showServicesAsList(services []string, passwords *database.PasswordDB, windo
 	servicesList.OnSelected = func(id int) {
 		password := passwords.Password(services[id])
 
-		serviceLiteralText := canvas.NewText("Service", color.White)
-		passwordLiteralText := canvas.NewText("Password", color.White)
+		serviceLiteralText := canvas.NewText("Service", theme.ForegroundColor())
+		passwordLiteralText := canvas.NewText("Password", theme.ForegroundColor())
 
-		serviceText := canvas.NewText(services[id], color.White)
-		passwordText := canvas.NewText(password, color.White)
+		serviceText := canvas.NewText(services[id], theme.ForegroundColor())
+		passwordText := canvas.NewText(password, theme.ForegroundColor())
 
 		serviceText.TextStyle.Bold = true
 		passwordText.TextStyle.Bold = true
