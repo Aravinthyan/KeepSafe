@@ -19,15 +19,24 @@ func setAppTheme(selectedTheme string) {
 	}
 }
 
-func loadConfig() {
+func loadConfig() string {
 	setAppTheme(config.AppConfig.Theme)
+	currentView := config.AppConfig.View
+	return currentView
 }
 
 func settings(passwords *database.PasswordDB, window fyne.Window) {
+	homeText := canvas.NewText("Default home view", theme.ForegroundColor())
+	homeSelect := widget.NewSelect([]string{config.SerachView, config.ListView}, func(selectedDefaultView string) {
+		config.AppConfig.View = selectedDefaultView
+	})
+	homeSelect.PlaceHolder = config.AppConfig.View
+
 	themeText := canvas.NewText("Theme", theme.ForegroundColor())
 	themeSelect := widget.NewSelect([]string{config.DarkTheme, config.LightTheme}, func(selectedTheme string) {
 		setAppTheme(selectedTheme)
 		themeText.Color = theme.ForegroundColor()
+		homeText.Color = theme.ForegroundColor()
 		config.AppConfig.Theme = selectedTheme
 	})
 	themeSelect.PlaceHolder = config.AppConfig.Theme
@@ -41,7 +50,12 @@ func settings(passwords *database.PasswordDB, window fyne.Window) {
 		nil,
 		nil,
 		nil,
-		container.NewVBox(themeText, themeSelect),
+		container.NewVBox(
+			themeText,
+			themeSelect,
+			homeText,
+			homeSelect,
+		),
 	)
 	window.SetContent(content)
 }

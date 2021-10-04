@@ -19,6 +19,8 @@ import (
 	"github.com/lithammer/fuzzysearch/fuzzy"
 )
 
+var currentView string
+
 // checkPassword will check if the user provided password is valid to decrypt the password database
 func checkPassword(passwords *database.PasswordDB, password []byte) bool {
 	if err := passwords.ReadPasswords(password); err != nil {
@@ -202,24 +204,8 @@ func delete(passwords *database.PasswordDB, window fyne.Window) {
 }
 
 func accessPasswords(passwords *database.PasswordDB, window fyne.Window) {
-	serviceEntry := widget.NewEntry()
-	serviceEntry.SetPlaceHolder("Enter service...")
-
-	errorMsg := canvas.NewText("", color.NRGBA{R: 255, G: 0, B: 0, A: 255})
-
-	searchButton := widget.NewButtonWithIcon("", theme.SearchIcon(), func() {
-		if serviceEntry.Text == "" {
-			errorMsg.Text = "Please enter a service"
-			errorMsg.Refresh()
-			return
-		}
-		searchResult := fuzzy.Find(serviceEntry.Text, passwords.Services)
-		if searchResult == nil {
-			errorMsg.Text = "Service does not exist"
-			errorMsg.Refresh()
-			return
-		}
-		showServicesAsList(searchResult, passwords, window)
+	settingsButton := widget.NewButtonWithIcon("", theme.SettingsIcon(), func() {
+		settings(passwords, window)
 	})
 
 	addButton := widget.NewButtonWithIcon("", theme.ContentAddIcon(), func() {
@@ -230,24 +216,36 @@ func accessPasswords(passwords *database.PasswordDB, window fyne.Window) {
 		delete(passwords, window)
 	})
 
-	listButton := widget.NewButtonWithIcon("", theme.MenuIcon(), func() {
-		showServicesAsList(passwords.Services, passwords, window)
-	})
+	var otherViewButton *widget.Button
+	var content *fyne.Container
 
-	settingsButton := widget.NewButtonWithIcon("", theme.SettingsIcon(), func() {
-		settings(passwords, window)
-	})
+	if currentView == config.SerachView {
+		serviceEntry := widget.NewEntry()
+		serviceEntry.SetPlaceHolder("Enter service...")
 
-	content := container.NewBorder(
-		container.New(layout.NewHBoxLayout(), settingsButton, layout.NewSpacer(), listButton),
-		container.NewGridWithColumns(
-			2,
-			addButton,
-			deleteButton,
-		),
-		nil,
-		nil,
-		container.NewGridWithRows(
+		errorMsg := canvas.NewText("", color.NRGBA{R: 255, G: 0, B: 0, A: 255})
+
+		searchButton := widget.NewButtonWithIcon("", theme.SearchIcon(), func() {
+			if serviceEntry.Text == "" {
+				errorMsg.Text = "Please enter a service"
+				errorMsg.Refresh()
+				return
+			}
+			searchResult := fuzzy.Find(serviceEntry.Text, passwords.Services)
+			if searchResult == nil {
+				errorMsg.Text = "Service does not exist"
+				errorMsg.Refresh()
+				return
+			}
+			showServicesAsList(searchResult, passwords, window)
+		})
+
+		otherViewButton = widget.NewButtonWithIcon("", theme.MenuIcon(), func() {
+			currentView = config.ListView
+			accessPasswords(passwords, window)
+		})
+
+		centerContents := container.NewGridWithRows(
 			14,
 			layout.NewSpacer(),
 			layout.NewSpacer(),
@@ -263,8 +261,75 @@ func accessPasswords(passwords *database.PasswordDB, window fyne.Window) {
 			layout.NewSpacer(),
 			layout.NewSpacer(),
 			layout.NewSpacer(),
-		),
-	)
+		)
+
+		content = container.NewBorder(
+			container.New(layout.NewHBoxLayout(), settingsButton, layout.NewSpacer(), otherViewButton, addButton, deleteButton),
+			nil,
+			nil,
+			nil,
+			centerContents,
+		)
+	} else if currentView == config.ListView {
+		data := binding.BindStringList(&passwords.Services)
+
+		servicesList := widget.NewListWithData(data,
+			func() fyne.CanvasObject {
+				return widget.NewLabel("")
+			},
+			func(i binding.DataItem, o fyne.CanvasObject) {
+				o.(*widget.Label).Bind(i.(binding.String))
+			})
+
+		servicesList.OnSelected = func(id int) {
+			password := passwords.Password(passwords.Services[id])
+
+			serviceLiteralText := canvas.NewText("Service", theme.ForegroundColor())
+			passwordLiteralText := canvas.NewText("Password", theme.ForegroundColor())
+
+			serviceText := canvas.NewText(passwords.Services[id], theme.ForegroundColor())
+			passwordText := canvas.NewText(password, theme.ForegroundColor())
+
+			serviceText.TextStyle.Bold = true
+			passwordText.TextStyle.Bold = true
+
+			serviceLiteralText.TextSize = 35
+			passwordLiteralText.TextSize = 35
+
+			serviceText.TextSize = 35
+			passwordText.TextSize = 35
+
+			content := container.NewBorder(
+				container.NewHBox(),
+				nil,
+				nil,
+				nil,
+				container.NewCenter(
+					container.NewVBox(
+						serviceLiteralText,
+						serviceText,
+						passwordLiteralText,
+						passwordText,
+					),
+				),
+			)
+
+			window.SetContent(content)
+		}
+
+		otherViewButton = widget.NewButtonWithIcon("", theme.SearchIcon(), func() {
+			currentView = config.SerachView
+			accessPasswords(passwords, window)
+		})
+
+		content = container.NewBorder(
+			container.New(layout.NewHBoxLayout(), settingsButton, layout.NewSpacer(), otherViewButton, addButton, deleteButton),
+			nil,
+			nil,
+			nil,
+			servicesList,
+		)
+	}
 
 	window.SetContent(content)
 }
@@ -277,7 +342,7 @@ func main() {
 	window.Resize(fyne.NewSize(500, 700))
 
 	config.AppConfig.ReadConfig()
-	loadConfig()
+	currentView = loadConfig()
 
 	var masterPassword []byte
 	var content *fyne.Container

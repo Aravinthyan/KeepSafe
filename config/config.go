@@ -7,11 +7,17 @@ import (
 
 type Config struct {
 	Theme string
+	View  string
 }
 
 const (
 	DarkTheme  = "dark"
 	LightTheme = "light"
+)
+
+const (
+	SerachView = "search"
+	ListView   = "list"
 )
 
 var AppConfig = newConfig()
@@ -21,6 +27,7 @@ var configFile = "./.config"
 func newConfig() *Config {
 	cfg := new(Config)
 	cfg.Theme = ""
+	cfg.View = ""
 	return cfg
 }
 
@@ -33,6 +40,7 @@ func (cfg *Config) ReadConfig() {
 
 	// if file does not exist or if unmarshal was unsuccesful then set default config
 	cfg.Theme = LightTheme
+	cfg.View = SerachView
 }
 
 func (cfg *Config) WriteConfig() {
