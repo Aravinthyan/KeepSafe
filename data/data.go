@@ -95,7 +95,7 @@ func Search(data *ListingData, passwords *database.PasswordDB) fyne.CanvasObject
 }
 
 // Add creates the UI that will allow a user to add a new service and the corresponding password.
-func Add(data, searchData *ListingData, passwords *database.PasswordDB) fyne.CanvasObject {
+func Add(data, searchData, removeData *ListingData, passwords *database.PasswordDB) fyne.CanvasObject {
 	servicesList := widget.NewListWithData(
 		data.Services,
 		func() fyne.CanvasObject {
@@ -141,6 +141,8 @@ func Add(data, searchData *ListingData, passwords *database.PasswordDB) fyne.Can
 		searchData.Services.Reload()
 		data.SearchResult = passwords.Services
 		data.Services.Reload()
+		removeData.SearchResult = passwords.Services
+		removeData.Services.Reload()
 		serviceEntry.SetText("")
 		passwordEntryOne.SetText("")
 		passwordEntryTwo.SetText("")
@@ -175,8 +177,65 @@ func Add(data, searchData *ListingData, passwords *database.PasswordDB) fyne.Can
 	return container.NewGridWithColumns(2, left, right)
 }
 
-func Remove() fyne.CanvasObject {
-	return widget.NewLabel("remove")
+// Remove creates the UI that will allow a user to remove an existing service and password.
+func Remove(data, searchData, addData *ListingData, passwords *database.PasswordDB) fyne.CanvasObject {
+	serviceEntry := widget.NewEntry()
+	serviceEntry.SetPlaceHolder("Enter service...")
+	serviceEntry.OnChanged = func(service string) {
+		data.SearchResult = fuzzy.Find(service, passwords.Services)
+		data.Services.Reload()
+	}
+
+	servicesList := widget.NewListWithData(
+		data.Services,
+		func() fyne.CanvasObject {
+			return widget.NewLabel("")
+		},
+		func(i binding.DataItem, o fyne.CanvasObject) {
+			o.(*widget.Label).Bind(i.(binding.String))
+		})
+
+	left := container.NewBorder(
+		serviceEntry,
+		nil,
+		nil,
+		nil,
+		servicesList,
+	)
+
+	prompt := widget.NewLabel("")
+	prompt.Hide()
+	var serviceToRemove string
+	var yesButton *widget.Button
+
+	servicesList.OnSelected = func(id int) {
+		prompt.Text = "Are you sure you want to delete " + data.SearchResult[id] + "?"
+		serviceToRemove = data.SearchResult[id]
+		prompt.Refresh()
+		prompt.Show()
+		yesButton.Show()
+	}
+
+	yesButton = widget.NewButtonWithIcon("", theme.ConfirmIcon(), func() {
+		passwords.Remove(serviceToRemove)
+		data.SearchResult = passwords.Services
+		data.Services.Reload()
+		searchData.SearchResult = passwords.Services
+		searchData.Services.Reload()
+		addData.SearchResult = passwords.Services
+		addData.Services.Reload()
+		serviceEntry.SetText("")
+		prompt.Hide()
+		yesButton.Hide()
+	})
+	yesButton.Hide()
+
+	right := container.NewVBox(
+		prompt,
+		yesButton,
+	)
+
+	return container.NewGridWithColumns(2, left, right)
 }
 
 func Settings() fyne.CanvasObject {
