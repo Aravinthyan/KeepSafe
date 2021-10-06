@@ -1,7 +1,6 @@
 package main
 
 import (
-	"image/color"
 	"os"
 
 	"fyne.io/fyne/v2"
@@ -14,9 +13,6 @@ import (
 	"github.com/Aravinthyan/KeepSafe/data"
 	"github.com/Aravinthyan/KeepSafe/database"
 )
-
-// red colour is used for error messages so declared once so that it can be used for all cases
-var red = color.NRGBA{R: 255, G: 0, B: 0, A: 255}
 
 // checkPassword will check if the user provided password is valid to decrypt the password database.
 func checkPassword(passwords *database.PasswordDB, password []byte) bool {
@@ -48,7 +44,7 @@ func main() {
 		passwordEntryTwo := widget.NewPasswordEntry()
 		passwordEntryTwo.SetPlaceHolder("Enter master password again...")
 
-		errorMsg := canvas.NewText("", red)
+		errorMsg := canvas.NewText("", data.Red)
 
 		enterButton := widget.NewButtonWithIcon("", theme.ConfirmIcon(), func() {
 			masterPassword = []byte(passwordEntryOne.Text)
@@ -85,7 +81,7 @@ func main() {
 		passwordEntry := widget.NewPasswordEntry()
 		passwordEntry.SetPlaceHolder("Enter master password...")
 
-		incorrectPassword := canvas.NewText("Incorrect password", red)
+		incorrectPassword := canvas.NewText("Incorrect password", data.Red)
 		incorrectPassword.Hide()
 
 		enterButton := widget.NewButtonWithIcon("", theme.ConfirmIcon(), func() {
