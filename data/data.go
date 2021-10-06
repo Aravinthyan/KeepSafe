@@ -1,6 +1,8 @@
 package data
 
 import (
+	"image/color"
+
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/canvas"
 	"fyne.io/fyne/v2/container"
@@ -10,6 +12,9 @@ import (
 	"github.com/Aravinthyan/KeepSafe/database"
 	"github.com/lithammer/fuzzysearch/fuzzy"
 )
+
+// Red colour is used for error messages so declared once so that it can be used for all cases
+var Red = color.NRGBA{R: 255, G: 0, B: 0, A: 255}
 
 // ListingData has information about the data that is currently being shown by a list widget.
 type ListingData struct {
