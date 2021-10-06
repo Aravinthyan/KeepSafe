@@ -11,6 +11,7 @@ import (
 	"fyne.io/fyne/v2/theme"
 	"fyne.io/fyne/v2/widget"
 
+	"github.com/Aravinthyan/KeepSafe/data"
 	"github.com/Aravinthyan/KeepSafe/database"
 )
 
@@ -25,26 +26,10 @@ func checkPassword(passwords *database.PasswordDB, password []byte) bool {
 	return true
 }
 
-func search() fyne.CanvasObject {
-	return widget.NewLabel("search")
-}
-
-func add() fyne.CanvasObject {
-	return widget.NewLabel("add")
-}
-
-func remove() fyne.CanvasObject {
-	return widget.NewLabel("remove")
-}
-
-func settings() fyne.CanvasObject {
-	return widget.NewLabel("mySettings")
-}
-
 func main() {
 	keepSafe := app.New()
 	passwords := database.New()
-
+	searchData := data.NewListingData()
 	window := keepSafe.NewWindow("Keep Safe")
 	window.Resize(fyne.NewSize(800, 400))
 
@@ -106,6 +91,8 @@ func main() {
 		enterButton := widget.NewButtonWithIcon("", theme.ConfirmIcon(), func() {
 			masterPassword = []byte(passwordEntry.Text)
 			if checkPassword(passwords, masterPassword) {
+				searchData.SearchResult = passwords.Services
+				searchData.Services.Reload()
 				passwordUI.Hide()
 				tabs.Show()
 			} else {
@@ -121,10 +108,10 @@ func main() {
 	}
 
 	tabs = container.NewAppTabs(
-		container.NewTabItemWithIcon("", theme.SearchIcon(), search()),
-		container.NewTabItemWithIcon("", theme.ContentAddIcon(), add()),
-		container.NewTabItemWithIcon("", theme.ContentRemoveIcon(), remove()),
-		container.NewTabItemWithIcon("", theme.SettingsIcon(), settings()),
+		container.NewTabItemWithIcon("", theme.SearchIcon(), data.Search(searchData, passwords)),
+		container.NewTabItemWithIcon("", theme.ContentAddIcon(), data.Add()),
+		container.NewTabItemWithIcon("", theme.ContentRemoveIcon(), data.Remove()),
+		container.NewTabItemWithIcon("", theme.SettingsIcon(), data.Settings()),
 	)
 	tabs.SetTabLocation(container.TabLocationLeading)
 	tabs.Hide()
