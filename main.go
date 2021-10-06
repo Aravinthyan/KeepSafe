@@ -27,6 +27,7 @@ func main() {
 	passwords := database.New()
 	searchData := data.NewListingData()
 	addData := data.NewListingData()
+	removeData := data.NewListingData()
 	window := keepSafe.NewWindow("Keep Safe")
 	window.Resize(fyne.NewSize(800, 400))
 
@@ -92,6 +93,8 @@ func main() {
 				searchData.Services.Reload()
 				addData.SearchResult = passwords.Services
 				addData.Services.Reload()
+				removeData.SearchResult = passwords.Services
+				removeData.Services.Reload()
 				passwordUI.Hide()
 				tabs.Show()
 			} else {
@@ -108,8 +111,8 @@ func main() {
 
 	tabs = container.NewAppTabs(
 		container.NewTabItemWithIcon("", theme.SearchIcon(), data.Search(searchData, passwords)),
-		container.NewTabItemWithIcon("", theme.ContentAddIcon(), data.Add(addData, searchData, passwords)),
-		container.NewTabItemWithIcon("", theme.ContentRemoveIcon(), data.Remove()),
+		container.NewTabItemWithIcon("", theme.ContentAddIcon(), data.Add(addData, searchData, removeData, passwords)),
+		container.NewTabItemWithIcon("", theme.ContentRemoveIcon(), data.Remove(removeData, searchData, addData, passwords)),
 		container.NewTabItemWithIcon("", theme.SettingsIcon(), data.Settings()),
 	)
 	tabs.SetTabLocation(container.TabLocationLeading)
