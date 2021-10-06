@@ -94,8 +94,85 @@ func Search(data *ListingData, passwords *database.PasswordDB) fyne.CanvasObject
 	return container.NewGridWithColumns(2, left, right)
 }
 
-func Add() fyne.CanvasObject {
-	return widget.NewLabel("add")
+// Add creates the UI that will allow a user to add a new service and the corresponding password.
+func Add(data, searchData *ListingData, passwords *database.PasswordDB) fyne.CanvasObject {
+	servicesList := widget.NewListWithData(
+		data.Services,
+		func() fyne.CanvasObject {
+			return widget.NewLabel("")
+		},
+		func(i binding.DataItem, o fyne.CanvasObject) {
+			o.(*widget.Label).Bind(i.(binding.String))
+		})
+
+	right := container.NewBorder(
+		nil,
+		nil,
+		nil,
+		nil,
+		servicesList,
+	)
+
+	serviceEntry := widget.NewEntry()
+	serviceEntry.SetPlaceHolder("Enter service...")
+
+	serviceEntry.OnChanged = func(service string) {
+		data.SearchResult = fuzzy.Find(service, passwords.Services)
+		data.Services.Reload()
+	}
+
+	displayMsg := canvas.NewText("", Red)
+
+	passwordEntryOne := widget.NewPasswordEntry()
+	passwordEntryOne.SetPlaceHolder("Enter password...")
+
+	passwordEntryTwo := widget.NewPasswordEntry()
+	passwordEntryTwo.SetPlaceHolder("Enter password again...")
+
+	createButton := widget.NewButtonWithIcon("", theme.ConfirmIcon(), func() {
+		if err := passwords.Insert(serviceEntry.Text, passwordEntryOne.Text); err != nil {
+			displayMsg.Text = "Service already exists"
+			displayMsg.Refresh()
+			return
+		}
+		// need to copy the slice to SearchResult, otherwise will use old one which is an error
+		searchData.SearchResult = passwords.Services
+		// reload to show updated list
+		searchData.Services.Reload()
+		data.SearchResult = passwords.Services
+		data.Services.Reload()
+		serviceEntry.SetText("")
+		passwordEntryOne.SetText("")
+		passwordEntryTwo.SetText("")
+	})
+	createButton.Disable()
+
+	onChanged := func(password string) {
+		if serviceEntry.Text == "" || passwordEntryTwo.Text == "" {
+			displayMsg.Text = ""
+			createButton.Disable()
+		} else if passwordEntryOne.Text != passwordEntryTwo.Text {
+			displayMsg.Text = "Passwords do not match"
+			createButton.Disable()
+		} else {
+			displayMsg.Text = ""
+			createButton.Enable()
+		}
+		displayMsg.Refresh()
+	}
+
+	passwordEntryOne.OnChanged = onChanged
+	passwordEntryTwo.OnChanged = onChanged
+
+	left := container.NewVBox(
+		serviceEntry,
+		passwordEntryOne,
+		passwordEntryTwo,
+		createButton,
+		displayMsg,
+	)
+
+	return container.NewGridWithColumns(2, left, right)
 }
 
 func Remove() fyne.CanvasObject {
