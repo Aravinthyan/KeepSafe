@@ -237,7 +237,3 @@ func Remove(data, searchData, addData *ListingData, passwords *database.Password
 
 	return container.NewGridWithColumns(2, left, right)
 }
-
-func Settings() fyne.CanvasObject {
-	return widget.NewLabel("settings")
-}

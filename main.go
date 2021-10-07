@@ -113,7 +113,6 @@ func main() {
 		container.NewTabItemWithIcon("", theme.SearchIcon(), data.Search(searchData, passwords)),
 		container.NewTabItemWithIcon("", theme.ContentAddIcon(), data.Add(addData, searchData, removeData, passwords)),
 		container.NewTabItemWithIcon("", theme.ContentRemoveIcon(), data.Remove(removeData, searchData, addData, passwords)),
-		container.NewTabItemWithIcon("", theme.SettingsIcon(), data.Settings()),
 	)
 	tabs.SetTabLocation(container.TabLocationLeading)
 	tabs.Hide()
