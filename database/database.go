@@ -16,7 +16,7 @@ type PasswordDB struct {
 }
 
 // PasswordFile contains the name of the file that contains the passwords.
-const PasswordFile = "./.passwords"
+const PasswordFile = "./appdata"
 
 // New creates a new PasswordDB.
 func New() *PasswordDB {
