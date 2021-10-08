@@ -30,6 +30,7 @@ func main() {
 	removeData := data.NewListingData()
 	window := keepSafe.NewWindow("Keep Safe")
 	window.Resize(fyne.NewSize(800, 400))
+	window.SetFixedSize(true)
 
 	var (
 		masterPassword []byte // holds master password
