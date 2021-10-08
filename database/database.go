@@ -1,12 +1,10 @@
 package database
 
 import (
-	"encoding/binary"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"io/ioutil"
-	"os"
 
 	"github.com/Aravinthyan/KeepSafe/crypto"
 )
@@ -66,9 +64,8 @@ func (db *PasswordDB) ReadPasswords(password []byte) error {
 func (db *PasswordDB) WritePasswords(password []byte) error {
 
 	var (
-		jsonData   []byte
-		outputFile *os.File
-		err        error
+		jsonData []byte
+		err      error
 	)
 
 	if db.wholeDB == nil {
@@ -84,13 +81,8 @@ func (db *PasswordDB) WritePasswords(password []byte) error {
 		return fmt.Errorf("encryption failed: %s", err)
 	}
 
-	if outputFile, err = os.Create(PasswordFile); err != nil {
-		return fmt.Errorf("path error: %s", err)
-	}
-	defer outputFile.Close()
-
-	if err = binary.Write(outputFile, binary.LittleEndian, []byte(encryptedJSONData)); err != nil {
-		return fmt.Errorf("binary.Write failed: %s", err)
+	if err = ioutil.WriteFile(PasswordFile, []byte(encryptedJSONData), 0400); err != nil {
+		return fmt.Errorf("write file failed: %s", err)
 	}
 
 	return nil
