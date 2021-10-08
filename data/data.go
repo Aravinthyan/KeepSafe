@@ -7,6 +7,7 @@ import (
 	"fyne.io/fyne/v2/canvas"
 	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/data/binding"
+	"fyne.io/fyne/v2/layout"
 	"fyne.io/fyne/v2/theme"
 	"fyne.io/fyne/v2/widget"
 	"github.com/Aravinthyan/KeepSafe/database"
@@ -68,6 +69,25 @@ func Search(data *ListingData, passwords *database.PasswordDB) fyne.CanvasObject
 		passwordText.Refresh()
 	}
 
+	infoCombined := container.NewCenter(
+		container.NewVBox(
+			serviceLiteralText,
+			serviceText,
+			passwordLiteralText,
+			passwordText,
+		),
+	)
+
+	passwordVisibility := widget.NewSlider(0, 1)
+	passwordVisibility.Step = 1
+	passwordVisibility.OnChanged = func(currentValue float64) {
+		if infoCombined.Hidden {
+			infoCombined.Show()
+		} else {
+			infoCombined.Hide()
+		}
+	}
+
 	left := container.NewBorder(
 		serviceEntry,
 		nil,
@@ -77,18 +97,11 @@ func Search(data *ListingData, passwords *database.PasswordDB) fyne.CanvasObject
 	)
 
 	right := container.NewBorder(
+		container.NewHBox(layout.NewSpacer(), passwordVisibility),
 		nil,
 		nil,
 		nil,
-		nil,
-		container.NewCenter(
-			container.NewVBox(
-				serviceLiteralText,
-				serviceText,
-				passwordLiteralText,
-				passwordText,
-			),
-		),
+		infoCombined,
 	)
 
 	return container.NewGridWithColumns(2, left, right)
