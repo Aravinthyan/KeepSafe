@@ -1,3 +1,5 @@
+//go:generate fyne bundle -o icon.go Icon.png
+
 package main
 
 import (
@@ -24,6 +26,7 @@ func checkPassword(passwords *database.PasswordDB, password []byte) bool {
 
 func main() {
 	keepSafe := app.New()
+	keepSafe.SetIcon(resourceIconPng)
 	passwords := database.New()
 	searchData := data.NewListingData()
 	addData := data.NewListingData()
