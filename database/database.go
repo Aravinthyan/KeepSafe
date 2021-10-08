@@ -17,7 +17,8 @@ type PasswordDB struct {
 	Services []string
 }
 
-const PasswordFile = "./passwords"
+// PasswordFile contains the name of the file that contains the passwords.
+const PasswordFile = "./.passwords"
 
 // New creates a new PasswordDB.
 func New() *PasswordDB {
