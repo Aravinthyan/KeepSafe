@@ -48,25 +48,19 @@ func Search(data *ListingData, passwords *database.PasswordDB) fyne.CanvasObject
 			o.(*widget.Label).Bind(i.(binding.String))
 		})
 
-	serviceLiteralText := canvas.NewText("Service", theme.ForegroundColor())
-	passwordLiteralText := canvas.NewText("Password", theme.ForegroundColor())
-	serviceText := canvas.NewText("", theme.ForegroundColor())
-	passwordText := canvas.NewText("", theme.ForegroundColor())
+	serviceLiteralText := widget.NewLabel("Service")
+	passwordLiteralText := widget.NewLabel("Password")
+	serviceText := widget.NewLabel("")
+	passwordText := widget.NewLabel("")
 
+	serviceLiteralText.TextStyle.Monospace = true
+	passwordLiteralText.TextStyle.Monospace = true
 	serviceText.TextStyle.Bold = true
 	passwordText.TextStyle.Bold = true
 
-	serviceLiteralText.TextSize = 30
-	passwordLiteralText.TextSize = 30
-	serviceText.TextSize = 30
-	passwordText.TextSize = 30
-
 	servicesList.OnSelected = func(id int) {
-		password := passwords.Password(data.SearchResult[id])
-		serviceText.Text = data.SearchResult[id]
-		passwordText.Text = password
-		serviceText.Refresh()
-		passwordText.Refresh()
+		serviceText.SetText(data.SearchResult[id])
+		passwordText.SetText(passwords.Password(data.SearchResult[id]))
 	}
 
 	infoCombined := container.NewCenter(
