@@ -216,7 +216,7 @@ func Remove(data, searchData, addData *ListingData, passwords *database.Password
 	var yesButton *widget.Button
 
 	servicesList.OnSelected = func(id int) {
-		prompt.Text = "Are you sure you want to delete " + data.SearchResult[id] + "?"
+		prompt.SetText("Are you sure you want to delete " + data.SearchResult[id] + "?")
 		serviceToRemove = data.SearchResult[id]
 		prompt.Refresh()
 		prompt.Show()
