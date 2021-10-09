@@ -12,6 +12,7 @@ import (
 	"fyne.io/fyne/v2/widget"
 	"github.com/Aravinthyan/KeepSafe/database"
 	"github.com/lithammer/fuzzysearch/fuzzy"
+	"github.com/sethvargo/go-password/password"
 )
 
 // Red colour is used for error messages so declared once so that it can be used for all cases
@@ -173,11 +174,22 @@ func Add(data, searchData, removeData *ListingData, passwords *database.Password
 	passwordEntryOne.OnChanged = onChanged
 	passwordEntryTwo.OnChanged = onChanged
 
+	generateButton := widget.NewButton("Generate Password", func() {
+		generatedPassword, err := password.Generate(20, 3, 3, false, false)
+		if err != nil {
+			displayMsg.Text = "Failed to generate a password"
+			displayMsg.Refresh()
+		}
+		passwordEntryOne.SetText(generatedPassword)
+		passwordEntryTwo.SetText(generatedPassword)
+	})
+
 	left := container.NewVBox(
 		serviceEntry,
 		passwordEntryOne,
 		passwordEntryTwo,
 		createButton,
+		generateButton,
 		displayMsg,
 	)
 
