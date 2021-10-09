@@ -12,6 +12,7 @@ import (
 	"fyne.io/fyne/v2/theme"
 	"fyne.io/fyne/v2/widget"
 
+	"github.com/Aravinthyan/KeepSafe/config"
 	"github.com/Aravinthyan/KeepSafe/data"
 	"github.com/Aravinthyan/KeepSafe/database"
 )
@@ -34,6 +35,9 @@ func main() {
 	window := keepSafe.NewWindow("Keep Safe")
 	window.Resize(fyne.NewSize(800, 400))
 	window.SetFixedSize(true)
+
+	userConfig := config.NewConfig()
+	userConfig.ReadConfig()
 
 	var (
 		masterPassword []byte // holds master password
@@ -113,10 +117,15 @@ func main() {
 		)
 	}
 
+	searchTab := data.Search(searchData, passwords)
+	addTab := data.Add(addData, searchData, removeData, passwords)
+	removeTab := data.Remove(removeData, searchData, addData, passwords)
+
 	tabs = container.NewAppTabs(
-		container.NewTabItemWithIcon("", theme.SearchIcon(), data.Search(searchData, passwords)),
-		container.NewTabItemWithIcon("", theme.ContentAddIcon(), data.Add(addData, searchData, removeData, passwords)),
-		container.NewTabItemWithIcon("", theme.ContentRemoveIcon(), data.Remove(removeData, searchData, addData, passwords)),
+		container.NewTabItemWithIcon("", theme.SearchIcon(), searchTab),
+		container.NewTabItemWithIcon("", theme.ContentAddIcon(), addTab),
+		container.NewTabItemWithIcon("", theme.ContentRemoveIcon(), removeTab),
+		container.NewTabItemWithIcon("", theme.SettingsIcon(), userConfig.Settings(searchTab, addTab, removeTab)),
 	)
 	tabs.SetTabLocation(container.TabLocationLeading)
 	tabs.Hide()
@@ -130,7 +139,9 @@ func main() {
 		tabs,
 	)
 
+	userConfig.LoadConfig(searchTab, addTab, removeTab)
 	window.SetContent(content)
 	window.ShowAndRun()
 	passwords.WritePasswords(masterPassword)
+	userConfig.WriteConfig()
 }
