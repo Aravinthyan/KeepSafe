@@ -1,12 +1,12 @@
 package database
 
 import (
-	"encoding/binary"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"io/ioutil"
 	"os"
+	"path/filepath"
 
 	"github.com/Aravinthyan/KeepSafe/crypto"
 )
@@ -17,7 +17,8 @@ type PasswordDB struct {
 	Services []string
 }
 
-const PasswordFile = "./passwords"
+// PasswordFile contains the name of the file that contains the passwords.
+const PasswordFile = "/appdata"
 
 // New creates a new PasswordDB.
 func New() *PasswordDB {
@@ -36,7 +37,9 @@ func (db *PasswordDB) ReadPasswords(password []byte) error {
 		err               error
 	)
 
-	if encryptedJSONData, err = ioutil.ReadFile(PasswordFile); err != nil {
+	exeFilePath, _ := os.Executable()
+	exeDirPath := filepath.Dir(exeFilePath)
+	if encryptedJSONData, err = ioutil.ReadFile(exeDirPath + PasswordFile); err != nil {
 		db.wholeDB = make(map[string]string)
 		return fmt.Errorf("no existing passwords: %s", err)
 	}
@@ -65,9 +68,8 @@ func (db *PasswordDB) ReadPasswords(password []byte) error {
 func (db *PasswordDB) WritePasswords(password []byte) error {
 
 	var (
-		jsonData   []byte
-		outputFile *os.File
-		err        error
+		jsonData []byte
+		err      error
 	)
 
 	if db.wholeDB == nil {
@@ -83,13 +85,10 @@ func (db *PasswordDB) WritePasswords(password []byte) error {
 		return fmt.Errorf("encryption failed: %s", err)
 	}
 
-	if outputFile, err = os.Create(PasswordFile); err != nil {
-		return fmt.Errorf("path error: %s", err)
-	}
-	defer outputFile.Close()
-
-	if err = binary.Write(outputFile, binary.LittleEndian, []byte(encryptedJSONData)); err != nil {
-		return fmt.Errorf("binary.Write failed: %s", err)
+	exeFilePath, _ := os.Executable()
+	exeDirPath := filepath.Dir(exeFilePath)
+	if err = ioutil.WriteFile(exeDirPath+PasswordFile, []byte(encryptedJSONData), 0400); err != nil {
+		return fmt.Errorf("write file failed: %s", err)
 	}
 
 	return nil

@@ -3,11 +3,13 @@ package config
 import (
 	"encoding/json"
 	"io/ioutil"
+	"os"
+	"path/filepath"
 )
 
+// Config contains the information about the user configuartion for the app.
 type Config struct {
 	Theme string
-	View  string
 }
 
 const (
@@ -15,38 +17,31 @@ const (
 	LightTheme = "light"
 )
 
-const (
-	SerachView = "search"
-	ListView   = "list"
-)
+var configFile = "/appConfig"
 
-var AppConfig = newConfig()
-
-var configFile = "./.config"
-
-func newConfig() *Config {
-	cfg := new(Config)
-	cfg.Theme = ""
-	cfg.View = ""
-	return cfg
+// NewConfig creates a new Config.
+func NewConfig() *Config {
+	return new(Config)
 }
 
+// ReadConfig will read the configFile and populate the user configuration into the struct and if
+// the config files does not exist or if there is an error when unmarshal then set default values.
 func (cfg *Config) ReadConfig() {
-	if data, err := ioutil.ReadFile(configFile); err == nil {
-		if json.Unmarshal(data, &cfg) == nil {
-			return
-		}
+	exeFilePath, _ := os.Executable()
+	exeDirPath := filepath.Dir(exeFilePath)
+	data, err := ioutil.ReadFile(exeDirPath + configFile)
+	if err == nil && json.Unmarshal(data, &cfg) == nil {
+		return
 	}
 
 	// if file does not exist or if unmarshal was unsuccesful then set default config
 	cfg.Theme = LightTheme
-	cfg.View = SerachView
 }
 
+// WriteConfig will write the user config to the configFile.
 func (cfg *Config) WriteConfig() {
-	if jsonData, err := json.Marshal(cfg); err == nil {
-		if err = ioutil.WriteFile(configFile, jsonData, 0666); err == nil {
-			return
-		}
-	}
+	jsonData, _ := json.Marshal(cfg)
+	exeFilePath, _ := os.Executable()
+	exeDirPath := filepath.Dir(exeFilePath)
+	ioutil.WriteFile(exeDirPath+configFile, jsonData, 0600)
 }
