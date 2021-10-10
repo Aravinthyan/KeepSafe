@@ -3,6 +3,8 @@ package config
 import (
 	"encoding/json"
 	"io/ioutil"
+	"os"
+	"path/filepath"
 
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/container"
@@ -20,7 +22,7 @@ const (
 	LightTheme = "light"
 )
 
-var configFile = "./appConfig"
+var configFile = "/appConfig"
 
 // NewConfig creates a new Config.
 func NewConfig() *Config {
@@ -30,7 +32,9 @@ func NewConfig() *Config {
 // ReadConfig will read the configFile and populate the user configuration into the struct and if
 // the config files does not exist or if there is an error when unmarshal then set default values.
 func (cfg *Config) ReadConfig() {
-	data, err := ioutil.ReadFile(configFile)
+	exeFilePath, _ := os.Executable()
+	exeDirPath := filepath.Dir(exeFilePath)
+	data, err := ioutil.ReadFile(exeDirPath + configFile)
 	if err == nil && json.Unmarshal(data, &cfg) == nil {
 		return
 	}
@@ -42,7 +46,9 @@ func (cfg *Config) ReadConfig() {
 // WriteConfig will write the user config to the configFile.
 func (cfg *Config) WriteConfig() {
 	jsonData, _ := json.Marshal(cfg)
-	ioutil.WriteFile(configFile, jsonData, 0600)
+	exeFilePath, _ := os.Executable()
+	exeDirPath := filepath.Dir(exeFilePath)
+	ioutil.WriteFile(exeDirPath+configFile, jsonData, 0600)
 }
 
 // setAppTheme will set the app theme to the selectedTheme (which is currently dark or light)

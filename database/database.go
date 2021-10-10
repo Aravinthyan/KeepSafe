@@ -5,6 +5,8 @@ import (
 	"errors"
 	"fmt"
 	"io/ioutil"
+	"os"
+	"path/filepath"
 
 	"github.com/Aravinthyan/KeepSafe/crypto"
 )
@@ -16,7 +18,7 @@ type PasswordDB struct {
 }
 
 // PasswordFile contains the name of the file that contains the passwords.
-const PasswordFile = "./appdata"
+const PasswordFile = "/appdata"
 
 // New creates a new PasswordDB.
 func New() *PasswordDB {
@@ -35,7 +37,9 @@ func (db *PasswordDB) ReadPasswords(password []byte) error {
 		err               error
 	)
 
-	if encryptedJSONData, err = ioutil.ReadFile(PasswordFile); err != nil {
+	exeFilePath, _ := os.Executable()
+	exeDirPath := filepath.Dir(exeFilePath)
+	if encryptedJSONData, err = ioutil.ReadFile(exeDirPath + PasswordFile); err != nil {
 		db.wholeDB = make(map[string]string)
 		return fmt.Errorf("no existing passwords: %s", err)
 	}
@@ -81,7 +85,9 @@ func (db *PasswordDB) WritePasswords(password []byte) error {
 		return fmt.Errorf("encryption failed: %s", err)
 	}
 
-	if err = ioutil.WriteFile(PasswordFile, []byte(encryptedJSONData), 0400); err != nil {
+	exeFilePath, _ := os.Executable()
+	exeDirPath := filepath.Dir(exeFilePath)
+	if err = ioutil.WriteFile(exeDirPath+PasswordFile, []byte(encryptedJSONData), 0400); err != nil {
 		return fmt.Errorf("write file failed: %s", err)
 	}
 
