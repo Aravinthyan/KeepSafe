@@ -4,6 +4,7 @@ package main
 
 import (
 	"os"
+	"path/filepath"
 
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/app"
@@ -45,9 +46,12 @@ func main() {
 		tabs           *container.AppTabs
 	)
 
+	exeFilePath, _ := os.Executable()
+	exeDirPath := filepath.Dir(exeFilePath)
+
 	// if the passwords file does not exist then a new password file will be created
 	// and the UI should request the user to enter a new master password
-	if _, err := os.Stat(database.PasswordFile); os.IsNotExist(err) {
+	if _, err := os.Stat(exeDirPath + database.PasswordFile); os.IsNotExist(err) {
 		passwordEntryOne := widget.NewPasswordEntry()
 		passwordEntryOne.SetPlaceHolder("Enter master password...")
 
