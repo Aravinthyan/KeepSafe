@@ -14,8 +14,8 @@ import (
 	"fyne.io/fyne/v2/widget"
 
 	"github.com/Aravinthyan/KeepSafe/config"
-	"github.com/Aravinthyan/KeepSafe/data"
 	"github.com/Aravinthyan/KeepSafe/database"
+	"github.com/Aravinthyan/KeepSafe/frontend"
 )
 
 // checkPassword will check if the user provided password is valid to decrypt the password database.
@@ -30,9 +30,9 @@ func main() {
 	keepSafe := app.New()
 	keepSafe.SetIcon(resourceIconPng)
 	passwords := database.New()
-	searchData := data.NewListingData()
-	addData := data.NewListingData()
-	removeData := data.NewListingData()
+	searchData := frontend.NewListingData()
+	addData := frontend.NewListingData()
+	removeData := frontend.NewListingData()
 	window := keepSafe.NewWindow("Keep Safe")
 	window.Resize(fyne.NewSize(800, 400))
 	window.SetFixedSize(true)
@@ -58,7 +58,7 @@ func main() {
 		passwordEntryTwo := widget.NewPasswordEntry()
 		passwordEntryTwo.SetPlaceHolder("Enter master password again...")
 
-		errorMsg := canvas.NewText("", data.Red)
+		errorMsg := canvas.NewText("", frontend.Red)
 
 		enterButton := widget.NewButtonWithIcon("", theme.ConfirmIcon(), func() {
 			masterPassword = []byte(passwordEntryOne.Text)
@@ -95,7 +95,7 @@ func main() {
 		passwordEntry := widget.NewPasswordEntry()
 		passwordEntry.SetPlaceHolder("Enter master password...")
 
-		incorrectPassword := canvas.NewText("Incorrect password", data.Red)
+		incorrectPassword := canvas.NewText("Incorrect password", frontend.Red)
 		incorrectPassword.Hide()
 
 		enterButton := widget.NewButtonWithIcon("", theme.ConfirmIcon(), func() {
@@ -121,15 +121,15 @@ func main() {
 		)
 	}
 
-	searchTab := data.Search(searchData, passwords)
-	addTab := data.Add(addData, searchData, removeData, passwords)
-	removeTab := data.Remove(removeData, searchData, addData, passwords)
+	searchTab := frontend.Search(searchData, passwords)
+	addTab := frontend.Add(addData, searchData, removeData, passwords)
+	removeTab := frontend.Remove(removeData, searchData, addData, passwords)
 
 	tabs = container.NewAppTabs(
 		container.NewTabItemWithIcon("", theme.SearchIcon(), searchTab),
 		container.NewTabItemWithIcon("", theme.ContentAddIcon(), addTab),
 		container.NewTabItemWithIcon("", theme.ContentRemoveIcon(), removeTab),
-		container.NewTabItemWithIcon("", theme.SettingsIcon(), userConfig.Settings(searchTab, addTab, removeTab)),
+		container.NewTabItemWithIcon("", theme.SettingsIcon(), frontend.Settings(searchTab, addTab, removeTab, userConfig)),
 	)
 	tabs.SetTabLocation(container.TabLocationLeading)
 	tabs.Hide()
@@ -143,7 +143,7 @@ func main() {
 		tabs,
 	)
 
-	userConfig.LoadConfig(searchTab, addTab, removeTab)
+	frontend.LoadConfig(searchTab, addTab, removeTab, userConfig)
 	window.SetContent(content)
 	window.ShowAndRun()
 	passwords.WritePasswords(masterPassword)

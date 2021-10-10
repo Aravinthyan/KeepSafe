@@ -5,11 +5,6 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
-
-	"fyne.io/fyne/v2"
-	"fyne.io/fyne/v2/container"
-	"fyne.io/fyne/v2/theme"
-	"fyne.io/fyne/v2/widget"
 )
 
 // Config contains the information about the user configuartion for the app.
@@ -49,50 +44,4 @@ func (cfg *Config) WriteConfig() {
 	exeFilePath, _ := os.Executable()
 	exeDirPath := filepath.Dir(exeFilePath)
 	ioutil.WriteFile(exeDirPath+configFile, jsonData, 0600)
-}
-
-// setAppTheme will set the app theme to the selectedTheme (which is currently dark or light)
-// and it will refresh all the other tabs (search, add, remove).
-func setAppTheme(searchTab, addTab, removeTab fyne.CanvasObject, selectedTheme string) {
-	if selectedTheme == DarkTheme {
-		fyne.CurrentApp().Settings().SetTheme(theme.DarkTheme())
-	} else if selectedTheme == LightTheme {
-		fyne.CurrentApp().Settings().SetTheme(theme.LightTheme())
-	}
-
-	// tabs need to be refreshed so that the theme can be applied to all the CanvasObjects
-	searchTab.Refresh()
-	addTab.Refresh()
-	removeTab.Refresh()
-}
-
-// LoadConfig will load the user config that was read by ReadConfig().
-func (cfg *Config) LoadConfig(searchTab, addTab, removeTab fyne.CanvasObject) {
-	setAppTheme(searchTab, addTab, removeTab, cfg.Theme)
-}
-
-// Settings will implement the settings UI so that the user can choose the configs/settings that they
-// want for the app.
-func (cfg *Config) Settings(searchTab, addTab, removeTab fyne.CanvasObject) fyne.CanvasObject {
-	themeText := widget.NewLabel("Theme")
-	themeText.TextStyle.Monospace = true
-
-	themeSelect := widget.NewSelect([]string{DarkTheme, LightTheme}, func(selectedTheme string) {
-		setAppTheme(searchTab, addTab, removeTab, selectedTheme)
-		cfg.Theme = selectedTheme
-	})
-	themeSelect.PlaceHolder = cfg.Theme
-
-	content := container.NewBorder(
-		nil,
-		nil,
-		nil,
-		nil,
-		container.NewVBox(
-			themeText,
-			themeSelect,
-		),
-	)
-
-	return content
 }

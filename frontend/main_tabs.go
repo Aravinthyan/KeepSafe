@@ -1,4 +1,4 @@
-package data
+package frontend
 
 import (
 	"image/color"
