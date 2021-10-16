@@ -2,6 +2,8 @@ package frontend
 
 import (
 	"image/color"
+	"os"
+	"path/filepath"
 
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/canvas"
@@ -10,13 +12,14 @@ import (
 	"fyne.io/fyne/v2/layout"
 	"fyne.io/fyne/v2/theme"
 	"fyne.io/fyne/v2/widget"
+	"github.com/Aravinthyan/KeepSafe/config"
 	"github.com/Aravinthyan/KeepSafe/database"
 	"github.com/lithammer/fuzzysearch/fuzzy"
 	"github.com/sethvargo/go-password/password"
 )
 
-// Red colour is used for error messages so declared once so that it can be used for all cases
-var Red = color.NRGBA{R: 255, G: 0, B: 0, A: 255}
+// red colour is used for error messages so declared once so that it can be used for all cases
+var red = color.NRGBA{R: 255, G: 0, B: 0, A: 255}
 
 // ListingData has information about the data that is currently being shown by a list widget.
 type ListingData struct {
@@ -31,8 +34,8 @@ func NewListingData() *ListingData {
 	return data
 }
 
-// Search creates the UI that will allow a user to search and find the desired password for a service.
-func Search(data *ListingData, passwords *database.PasswordDB) fyne.CanvasObject {
+// search creates the UI that will allow a user to search and find the desired password for a service.
+func search(data *ListingData, passwords *database.PasswordDB) fyne.CanvasObject {
 	serviceEntry := widget.NewEntry()
 	serviceEntry.SetPlaceHolder("Enter service...")
 	serviceEntry.OnChanged = func(service string) {
@@ -102,8 +105,8 @@ func Search(data *ListingData, passwords *database.PasswordDB) fyne.CanvasObject
 	return container.NewGridWithColumns(2, left, right)
 }
 
-// Add creates the UI that will allow a user to add a new service and the corresponding password.
-func Add(data, searchData, removeData *ListingData, passwords *database.PasswordDB) fyne.CanvasObject {
+// add creates the UI that will allow a user to add a new service and the corresponding password.
+func add(data, searchData, removeData *ListingData, passwords *database.PasswordDB) fyne.CanvasObject {
 	servicesList := widget.NewListWithData(
 		data.Services,
 		func() fyne.CanvasObject {
@@ -129,7 +132,7 @@ func Add(data, searchData, removeData *ListingData, passwords *database.Password
 		data.Services.Reload()
 	}
 
-	displayMsg := canvas.NewText("", Red)
+	displayMsg := canvas.NewText("", red)
 
 	passwordEntryOne := widget.NewPasswordEntry()
 	passwordEntryOne.SetPlaceHolder("Enter password...")
@@ -196,8 +199,8 @@ func Add(data, searchData, removeData *ListingData, passwords *database.Password
 	return container.NewGridWithColumns(2, left, right)
 }
 
-// Remove creates the UI that will allow a user to remove an existing service and password.
-func Remove(data, searchData, addData *ListingData, passwords *database.PasswordDB) fyne.CanvasObject {
+// remove creates the UI that will allow a user to remove an existing service and password.
+func remove(data, searchData, addData *ListingData, passwords *database.PasswordDB) fyne.CanvasObject {
 	serviceEntry := widget.NewEntry()
 	serviceEntry.SetPlaceHolder("Enter service...")
 	serviceEntry.OnChanged = func(service string) {
@@ -255,4 +258,131 @@ func Remove(data, searchData, addData *ListingData, passwords *database.Password
 	)
 
 	return container.NewGridWithColumns(2, left, right)
+}
+
+// checkPassword will check if the user provided password is valid to decrypt the password database.
+func checkPassword(passwords *database.PasswordDB, password []byte) bool {
+	if err := passwords.ReadPasswords(password); err != nil {
+		return false
+	}
+	return true
+}
+
+// LoadUI will load the UI only without running the application.
+func LoadUI(keepSafe fyne.App, passwords *database.PasswordDB, userConfig *config.Config) *[]byte {
+	searchData := NewListingData()
+	addData := NewListingData()
+	removeData := NewListingData()
+	window := keepSafe.NewWindow("Keep Safe")
+	window.Resize(fyne.NewSize(800, 400))
+	window.SetFixedSize(true)
+
+	var (
+		masterPassword []byte
+		passwordUI     *fyne.Container
+		tabs           *container.AppTabs
+	)
+
+	exeFilePath, _ := os.Executable()
+	exeDirPath := filepath.Dir(exeFilePath)
+
+	// if the passwords file does not exist then a new password file will be created
+	// and the UI should request the user to enter a new master password
+	if _, err := os.Stat(exeDirPath + database.PasswordFile); os.IsNotExist(err) {
+		passwordEntryOne := widget.NewPasswordEntry()
+		passwordEntryOne.SetPlaceHolder("Enter master password...")
+
+		passwordEntryTwo := widget.NewPasswordEntry()
+		passwordEntryTwo.SetPlaceHolder("Enter master password again...")
+
+		errorMsg := canvas.NewText("", red)
+
+		enterButton := widget.NewButtonWithIcon("", theme.ConfirmIcon(), func() {
+			masterPassword = []byte(passwordEntryOne.Text)
+			passwords.CreateEmptyDB()
+			passwordUI.Hide()
+			tabs.Show()
+		})
+		enterButton.Disable()
+
+		onChanged := func(password string) {
+			if passwordEntryTwo.Text == "" {
+				errorMsg.Text = ""
+				enterButton.Disable()
+			} else if passwordEntryOne.Text != passwordEntryTwo.Text {
+				errorMsg.Text = "Passwords do not match"
+				enterButton.Disable()
+			} else {
+				errorMsg.Text = ""
+				enterButton.Enable()
+			}
+			errorMsg.Refresh()
+		}
+
+		passwordEntryOne.OnChanged = onChanged
+		passwordEntryTwo.OnChanged = onChanged
+
+		passwordUI = container.NewVBox(
+			passwordEntryOne,
+			passwordEntryTwo,
+			enterButton,
+			errorMsg,
+		)
+	} else { // password file exist, therefore ask to enter master password
+		passwordEntry := widget.NewPasswordEntry()
+		passwordEntry.SetPlaceHolder("Enter master password...")
+
+		incorrectPassword := canvas.NewText("Incorrect password", red)
+		incorrectPassword.Hide()
+
+		enterButton := widget.NewButtonWithIcon("", theme.ConfirmIcon(), func() {
+			masterPassword = []byte(passwordEntry.Text)
+			if checkPassword(passwords, masterPassword) {
+				searchData.SearchResult = passwords.Services
+				searchData.Services.Reload()
+				addData.SearchResult = passwords.Services
+				addData.Services.Reload()
+				removeData.SearchResult = passwords.Services
+				removeData.Services.Reload()
+				passwordUI.Hide()
+				tabs.Show()
+			} else {
+				incorrectPassword.Show()
+			}
+		})
+
+		passwordUI = container.NewVBox(
+			passwordEntry,
+			enterButton,
+			incorrectPassword,
+		)
+	}
+
+	searchTab := search(searchData, passwords)
+	addTab := add(addData, searchData, removeData, passwords)
+	removeTab := remove(removeData, searchData, addData, passwords)
+
+	tabs = container.NewAppTabs(
+		container.NewTabItemWithIcon("", theme.SearchIcon(), searchTab),
+		container.NewTabItemWithIcon("", theme.ContentAddIcon(), addTab),
+		container.NewTabItemWithIcon("", theme.ContentRemoveIcon(), removeTab),
+		container.NewTabItemWithIcon("", theme.SettingsIcon(), settings(searchTab, addTab, removeTab, userConfig)),
+	)
+	tabs.SetTabLocation(container.TabLocationLeading)
+	tabs.Hide()
+
+	content := container.NewBorder(
+		nil,
+		nil,
+		nil,
+		nil,
+		passwordUI,
+		tabs,
+	)
+
+	loadConfig(searchTab, addTab, removeTab, userConfig)
+	window.SetContent(content)
+	window.Show()
+
+	return &masterPassword
 }

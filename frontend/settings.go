@@ -23,14 +23,14 @@ func setAppTheme(searchTab, addTab, removeTab fyne.CanvasObject, selectedTheme s
 	removeTab.Refresh()
 }
 
-// LoadConfig will load the user config that was read by ReadConfig().
-func LoadConfig(searchTab, addTab, removeTab fyne.CanvasObject, cfg *config.Config) {
+// loadConfig will load the user config that was read by ReadConfig().
+func loadConfig(searchTab, addTab, removeTab fyne.CanvasObject, cfg *config.Config) {
 	setAppTheme(searchTab, addTab, removeTab, cfg.Theme)
 }
 
-// Settings will implement the settings UI so that the user can choose the configs/settings that they
+// settings will implement the settings UI so that the user can choose the configs/settings that they
 // want for the app.
-func Settings(searchTab, addTab, removeTab fyne.CanvasObject, cfg *config.Config) fyne.CanvasObject {
+func settings(searchTab, addTab, removeTab fyne.CanvasObject, cfg *config.Config) fyne.CanvasObject {
 	themeText := widget.NewLabel("Theme")
 	themeText.TextStyle.Monospace = true
 
