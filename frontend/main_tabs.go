@@ -92,16 +92,19 @@ func search(data *ListingData, passwords *database.PasswordDB) fyne.CanvasObject
 		nil,
 		infoCombined,
 	)
+	right.Hide()
 
 	servicesList.OnSelected = func(id int) {
 		serviceText.SetText(data.SearchResult[id])
 		passwordText.SetText(passwords.Password(data.SearchResult[id]))
+		right.Show()
 	}
 
 	serviceEntry.OnChanged = func(service string) {
 		data.SearchResult = fuzzy.Find(service, passwords.Services)
 		data.Services.Reload()
 		servicesList.UnselectAll()
+		right.Hide()
 	}
 
 	return container.NewGridWithColumns(2, left, right)
@@ -249,6 +252,7 @@ func remove(data, searchData, addData *ListingData, passwords *database.Password
 		data.SearchResult = fuzzy.Find(service, passwords.Services)
 		data.Services.Reload()
 		servicesList.UnselectAll()
+		right.Hide()
 	}
 
 	servicesList.OnSelected = func(id int) {
