@@ -38,10 +38,6 @@ func NewListingData() *ListingData {
 func search(data *ListingData, passwords *database.PasswordDB) fyne.CanvasObject {
 	serviceEntry := widget.NewEntry()
 	serviceEntry.SetPlaceHolder("Enter service...")
-	serviceEntry.OnChanged = func(service string) {
-		data.SearchResult = fuzzy.Find(service, passwords.Services)
-		data.Services.Reload()
-	}
 
 	servicesList := widget.NewListWithData(
 		data.Services,
@@ -52,6 +48,14 @@ func search(data *ListingData, passwords *database.PasswordDB) fyne.CanvasObject
 			o.(*widget.Label).Bind(i.(binding.String))
 		})
 
+	left := container.NewBorder(
+		serviceEntry,
+		nil,
+		nil,
+		nil,
+		servicesList,
+	)
+
 	serviceLiteralText := widget.NewLabel("Service")
 	passwordLiteralText := widget.NewLabel("Password")
 	serviceText := widget.NewLabel("")
@@ -61,11 +65,6 @@ func search(data *ListingData, passwords *database.PasswordDB) fyne.CanvasObject
 	passwordLiteralText.TextStyle.Monospace = true
 	serviceText.TextStyle.Bold = true
 	passwordText.TextStyle.Bold = true
-
-	servicesList.OnSelected = func(id int) {
-		serviceText.SetText(data.SearchResult[id])
-		passwordText.SetText(passwords.Password(data.SearchResult[id]))
-	}
 
 	infoCombined := container.NewCenter(
 		container.NewVBox(
@@ -86,14 +85,6 @@ func search(data *ListingData, passwords *database.PasswordDB) fyne.CanvasObject
 		}
 	}
 
-	left := container.NewBorder(
-		serviceEntry,
-		nil,
-		nil,
-		nil,
-		servicesList,
-	)
-
 	right := container.NewBorder(
 		container.NewHBox(layout.NewSpacer(), passwordVisibility),
 		nil,
@@ -101,6 +92,17 @@ func search(data *ListingData, passwords *database.PasswordDB) fyne.CanvasObject
 		nil,
 		infoCombined,
 	)
+
+	servicesList.OnSelected = func(id int) {
+		serviceText.SetText(data.SearchResult[id])
+		passwordText.SetText(passwords.Password(data.SearchResult[id]))
+	}
+
+	serviceEntry.OnChanged = func(service string) {
+		data.SearchResult = fuzzy.Find(service, passwords.Services)
+		data.Services.Reload()
+		servicesList.UnselectAll()
+	}
 
 	return container.NewGridWithColumns(2, left, right)
 }
@@ -203,10 +205,6 @@ func add(data, searchData, removeData *ListingData, passwords *database.Password
 func remove(data, searchData, addData *ListingData, passwords *database.PasswordDB) fyne.CanvasObject {
 	serviceEntry := widget.NewEntry()
 	serviceEntry.SetPlaceHolder("Enter service...")
-	serviceEntry.OnChanged = func(service string) {
-		data.SearchResult = fuzzy.Find(service, passwords.Services)
-		data.Services.Reload()
-	}
 
 	servicesList := widget.NewListWithData(
 		data.Services,
@@ -225,20 +223,11 @@ func remove(data, searchData, addData *ListingData, passwords *database.Password
 		servicesList,
 	)
 
-	prompt := widget.NewLabel("")
-	prompt.Hide()
 	var serviceToRemove string
-	var yesButton *widget.Button
+	var right *fyne.Container
+	prompt := widget.NewLabel("")
 
-	servicesList.OnSelected = func(id int) {
-		prompt.SetText("Are you sure you want to delete " + data.SearchResult[id] + "?")
-		serviceToRemove = data.SearchResult[id]
-		prompt.Refresh()
-		prompt.Show()
-		yesButton.Show()
-	}
-
-	yesButton = widget.NewButtonWithIcon("", theme.ConfirmIcon(), func() {
+	yesButton := widget.NewButtonWithIcon("", theme.ConfirmIcon(), func() {
 		passwords.Remove(serviceToRemove)
 		data.SearchResult = passwords.Services
 		data.Services.Reload()
@@ -247,15 +236,27 @@ func remove(data, searchData, addData *ListingData, passwords *database.Password
 		addData.SearchResult = passwords.Services
 		addData.Services.Reload()
 		serviceEntry.SetText("")
-		prompt.Hide()
-		yesButton.Hide()
+		right.Hide()
 	})
-	yesButton.Hide()
 
-	right := container.NewVBox(
+	right = container.NewVBox(
 		prompt,
 		yesButton,
 	)
+	right.Hide()
+
+	serviceEntry.OnChanged = func(service string) {
+		data.SearchResult = fuzzy.Find(service, passwords.Services)
+		data.Services.Reload()
+		servicesList.UnselectAll()
+	}
+
+	servicesList.OnSelected = func(id int) {
+		prompt.SetText("Are you sure you want to delete " + data.SearchResult[id] + "?")
+		serviceToRemove = data.SearchResult[id]
+		prompt.Refresh()
+		right.Show()
+	}
 
 	return container.NewGridWithColumns(2, left, right)
 }
